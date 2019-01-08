@@ -1,7 +1,10 @@
 import dotenv from 'dotenv'
 import express from 'express'
 import { createMongoConn } from './createMongoConn'
-import { ApolloServer, gql } from 'apollo-server-express'
+import { ApolloServer } from 'apollo-server-express'
+
+import typeDefs from './schema'
+import resolvers from './resolvers'
 
 dotenv.config({
   path: `.env.${process.env.NODE_ENV}`,
@@ -14,18 +17,6 @@ const startServer = async () => {
   await createMongoConn()
 
   const app = express()
-
-  const typeDefs = gql`
-    type Query {
-      hello: String
-    }
-  `
-
-  const resolvers = {
-    Query: {
-      hello: () => 'Hello World!',
-    },
-  }
 
   const server = new ApolloServer({
     typeDefs,
