@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import express from 'express'
+import { createMongoConn } from './createMongoConn'
 import { ApolloServer, gql } from 'apollo-server-express'
 
 dotenv.config({
@@ -10,6 +11,8 @@ const port = process.env.APP_PORT || 4000
 const dev = process.env.NODE_ENV !== 'production'
 
 const startServer = async () => {
+  await createMongoConn()
+
   const app = express()
 
   const typeDefs = gql`
