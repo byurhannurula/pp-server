@@ -1,7 +1,7 @@
-import mongoose from 'mongoose'
-import { hash } from 'bcrypt'
+import mongoose, { Schema } from 'mongoose'
+import { hash, compare } from 'bcrypt'
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
   {
     name: String,
     email: {
@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
       validate: {
         validator: async email =>
           (await User.where({ email }).countDocuments()) === 0,
-        message: ({ value }) => `Email ${value} has already been taken!`,
+        message: () => `Email has already been taken!`,
       },
     },
     username: {
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
       validate: {
         validator: async username =>
           (await User.where({ username }).countDocuments()) === 0,
-        message: ({ value }) => `Username ${value} has already been taken!`,
+        message: () => `Username has already been taken!`,
       },
     },
     password: String,
@@ -32,6 +32,10 @@ userSchema.pre('save', async function() {
     this.password = await hash(this.password, 12)
   }
 })
+
+userSchema.methods.matchesPassword = function(password) {
+  return compare(password, this.password)
+}
 
 const User = mongoose.model('User', userSchema)
 

@@ -2,35 +2,68 @@ import Joi from 'joi'
 import mongoose from 'mongoose'
 import { UserInputError } from 'apollo-server-express'
 
+import * as auth from '../auth'
 import { User } from '../models'
-import { registerSchema } from '../utils'
+import { loginSchema, registerSchema } from '../utils'
 
 export default {
   Query: {
-    users: (parent, args, context, info) => {
-      // TODO: auth
+    users: (parent, args, { req }, info) => {
+      auth.checkSignedIn(req)
 
       return User.find({})
     },
     user: (parent, { id }, context, info) => {
-      // TODO: auth
+      auth.checkSignedIn(req)
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new UserInputError(`${id} is not a valid user ID!`)
+        throw new UserInputError(`User ID is not a valid Object ID!`)
       }
 
       return User.findById(id)
     },
+    me: (parent, args, { req }, info) => {
+      auth.checkSignedIn(req)
+
+      return User.findById(req.session.userId)
+    },
   },
   Mutation: {
-    register: async (parent, args, context, info) => {
-      // TODO: auth
+    signUp: async (parent, args, { req }, info) => {
+      auth.checkSignedOut(req)
 
       // validation
       await Joi.validate(args, registerSchema, {
         abortEarly: false,
       })
-      return User.create(args)
+
+      // if validatio is true create user with args
+      const user = await User.create(args)
+      // set user id to session.userId
+      req.session.userId = user.id
+
+      return user
+    },
+    signIn: async (parent, args, { req }, info) => {
+      // validation
+      await Joi.validate(args, loginSchema, {
+        abortEarly: false,
+      })
+
+      if (req.session.userId) {
+        return User.findById(req.session.userId)
+      }
+
+      const user = await auth.attemptSignIn(args.username, args.password)
+
+      req.session.userId = user.id
+
+      return user
+    },
+    signOut: (parent, args, { req, res }, info) => {
+      auth.checkSignedIn(req)
+
+      return auth.signOut(req, res)
     },
   },
 }

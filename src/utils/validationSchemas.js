@@ -34,3 +34,29 @@ export const registerSchema = Joi.object().keys({
       },
     }),
 })
+
+export const loginSchema = Joi.object().keys({
+  username: Joi.string()
+    .alphanum()
+    .min(4)
+    .max(254)
+    .required()
+    .regex(/^[a-zA-Z0-9]*$/)
+    .label('Username'),
+  password: Joi.string()
+    .min(8)
+    .max(254)
+    .required()
+    .regex(/^(?=\S*[a-z])(?=\S*[A-Z])(?=\S*\d).*$/)
+    .label('Passowrd')
+    .options({
+      language: {
+        string: {
+          regex: {
+            base:
+              'must contain at least 8 character, one uppercase, one lowercase and one digit!',
+          },
+        },
+      },
+    }),
+})
