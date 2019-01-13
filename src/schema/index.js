@@ -1,5 +1,9 @@
 import { gql } from 'apollo-server-express'
+
 import userSchema from './user'
+import roomSchema from './room'
+import storySchema from './story'
+import voteSchema from './vote'
 
 const baseSchema = gql`
   type Query {
@@ -15,4 +19,4 @@ const baseSchema = gql`
   }
 `
 
-export default [baseSchema, userSchema]
+export default [baseSchema, userSchema, roomSchema, storySchema, voteSchema]
