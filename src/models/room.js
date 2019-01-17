@@ -3,9 +3,6 @@ import mongoose, { Schema, Types } from 'mongoose'
 const roomSchema = new Schema(
   {
     name: String,
-    email: {
-      type: String,
-    },
     users: {
       type: Types.ObjectId,
       ref: 'User',

@@ -11,7 +11,6 @@ export const registerSchema = Joi.object().keys({
     .min(4)
     .max(254)
     .required()
-    .regex(/^[a-zA-Z0-9]*$/)
     .label('Username'),
   email: Joi.string()
     .email()
@@ -41,7 +40,6 @@ export const loginSchema = Joi.object().keys({
     .min(4)
     .max(254)
     .required()
-    .regex(/^[a-zA-Z0-9]*$/)
     .label('Username'),
   password: Joi.string()
     .min(8)

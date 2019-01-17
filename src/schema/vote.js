@@ -7,7 +7,7 @@ export default gql`
   }
 
   extend type Mutation {
-    vote(): Vote
+    vote: Vote
   }
 
   type Vote {
