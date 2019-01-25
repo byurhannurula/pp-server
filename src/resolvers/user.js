@@ -1,5 +1,6 @@
 import Joi from 'joi'
 import mongoose from 'mongoose'
+import gravatar from 'gravatar'
 import { UserInputError } from 'apollo-server-express'
 
 import * as auth from '../auth'
@@ -37,7 +38,18 @@ export default {
         abortEarly: false,
       })
 
-      // if validatio is true create user with args
+      args.avatar = await gravatar.url(
+        args.email,
+        {
+          protocol: 'https',
+          s: '200', // Size
+          r: 'pg', // Rating
+          d: 'mm', // Default
+        },
+        true,
+      )
+
+      // if validation is true create user with args
       const user = await User.create(args)
       // set user id to session.userId
       req.session.userId = user.id
@@ -54,7 +66,7 @@ export default {
         return User.findById(req.session.userId)
       }
 
-      const user = await auth.attemptSignIn(args.username, args.password)
+      const user = await auth.attemptSignIn(args.email, args.password)
 
       req.session.userId = user.id
 

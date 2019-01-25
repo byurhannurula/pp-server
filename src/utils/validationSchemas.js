@@ -2,23 +2,16 @@ import Joi from 'joi'
 
 export const registerSchema = Joi.object().keys({
   name: Joi.string()
-    .alphanum()
     .max(254)
     .required()
     .label('Name'),
-  username: Joi.string()
-    .alphanum()
-    .min(4)
-    .max(254)
-    .required()
-    .label('Username'),
   email: Joi.string()
     .email()
     .required()
     .label('Email'),
   password: Joi.string()
     .min(8)
-    .max(254)
+    .max(60)
     .required()
     .regex(/^(?=\S*[a-z])(?=\S*[A-Z])(?=\S*\d).*$/)
     .label('Passowrd')
@@ -35,15 +28,13 @@ export const registerSchema = Joi.object().keys({
 })
 
 export const loginSchema = Joi.object().keys({
-  username: Joi.string()
-    .alphanum()
-    .min(4)
-    .max(254)
+  email: Joi.string()
+    .email()
     .required()
-    .label('Username'),
+    .label('Email'),
   password: Joi.string()
     .min(8)
-    .max(254)
+    .max(60)
     .required()
     .regex(/^(?=\S*[a-z])(?=\S*[A-Z])(?=\S*\d).*$/)
     .label('Passowrd')

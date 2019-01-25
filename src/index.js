@@ -1,8 +1,9 @@
+import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
+import mongoose from 'mongoose'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
-import { createMongoConn } from './createMongoConn'
 import { ApolloServer } from 'apollo-server-express'
 
 import typeDefs from './schema'
@@ -16,7 +17,15 @@ const port = process.env.APP_PORT || 4000
 const dev = process.env.NODE_ENV !== 'production'
 
 const startServer = async () => {
-  await createMongoConn()
+  await mongoose
+    .connect(
+      `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${
+        process.env.DB_HOST
+      }:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+      { useNewUrlParser: true },
+    )
+    .then(() => console.log(`🔗  MongoDB Connected...`))
+    .catch(err => console.log(`❌  MongoDB Connection error: ${err}`))
 
   const app = express()
 
@@ -41,6 +50,16 @@ const startServer = async () => {
         maxAge: 1000 * 60 * 60 * 24,
         secure: process.env.NODE_ENV === 'production',
       },
+    }),
+  )
+
+  app.use(
+    cors({
+      credentials: true,
+      origin: 'http://localhost:3000/',
+      // process.env.NODE_ENV === 'production'
+      //   ? 'https://pp-app.byurhanbeyzat.com/'
+      //   : 'http://localhost:3000/',
     }),
   )
 

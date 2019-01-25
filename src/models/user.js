@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose'
 import { hash, compare } from 'bcrypt'
+import crypto from 'crypto'
 
 const userSchema = new Schema(
   {
@@ -12,15 +13,14 @@ const userSchema = new Schema(
         message: () => `Email has already been taken!`,
       },
     },
-    username: {
-      type: String,
-      validate: {
-        validator: async username =>
-          (await User.where({ username }).countDocuments()) === 0,
-        message: () => `Username has already been taken!`,
-      },
-    },
     password: String,
+    avatar: String,
+    createdRooms: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Room',
+      },
+    ],
   },
   {
     timestamps: true,

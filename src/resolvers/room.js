@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import { UserInputError } from 'apollo-server-express'
 
 import * as auth from '../auth'
-import { Room } from '../models'
+import { Room, User } from '../models'
 
 export default {
   Query: {
@@ -26,7 +26,7 @@ export default {
       auth.checkSignedIn(req)
 
       const room = await Room.create(args)
-
+      User.createdRooms.push(args.id)
       return room
     },
     updateRoom: async (parent, args, { req }, info) => {
