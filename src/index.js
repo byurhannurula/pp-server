@@ -56,10 +56,10 @@ const startServer = async () => {
   app.use(
     cors({
       credentials: true,
-      origin: 'http://localhost:3000/',
-      // process.env.NODE_ENV === 'production'
-      //   ? 'https://pp-app.byurhanbeyzat.com/'
-      //   : 'http://localhost:3000/',
+      origin:
+        process.env.NODE_ENV === 'production'
+          ? 'https://pp-app.byurhanbeyzat.com'
+          : 'http://localhost:3000',
     }),
   )
 
