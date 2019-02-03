@@ -13,7 +13,7 @@ dotenv.config({
   path: `.env.${process.env.NODE_ENV}`,
 })
 
-const port = process.env.APP_PORT || 4000
+const port = process.env.PORT || 4000
 const dev = process.env.NODE_ENV !== 'production'
 
 const startServer = async () => {
