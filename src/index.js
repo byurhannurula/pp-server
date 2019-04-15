@@ -73,7 +73,7 @@ const startServer = async () => {
       credentials: true,
       origin:
         process.env.NODE_ENV === 'production'
-          ? 'https://pp-app.now.sh'
+          ? process.env.FRONT_END_URL
           : 'http://localhost:3000',
     }),
   )
