@@ -31,6 +31,21 @@ const startServer = async () => {
 
   app.disable('x-powered-by')
 
+  app.use((req, _, next) => {
+    const authorization = req.headers.authorization;
+
+    if (authorization) {
+      try {
+        const cid = authorization.split(" ")[1];
+        req.headers.cookie = `cid=${cid}`;
+      } catch(err) {
+        console.log(err)
+      }
+    }
+
+    return next();
+  });
+
   const RedisStore = connectRedis(session)
 
   app.use(
@@ -58,7 +73,7 @@ const startServer = async () => {
       credentials: true,
       origin:
         process.env.NODE_ENV === 'production'
-          ? 'https://pp-app.byurhanbeyzat.com'
+          ? 'https://pp-app.netlify.com'
           : 'http://localhost:3000',
     }),
   )
