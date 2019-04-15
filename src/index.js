@@ -73,7 +73,7 @@ const startServer = async () => {
       credentials: true,
       origin:
         process.env.NODE_ENV === 'production'
-          ? 'https://pp-app.netlify.com'
+          ? 'https://pp-app.now.sh'
           : 'http://localhost:3000',
     }),
   )
