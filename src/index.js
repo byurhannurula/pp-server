@@ -63,10 +63,12 @@ const startServer = async () => {
       cookie: {
         sameSite: true,
         maxAge: 1000 * 60 * 60 * 24,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false
       },
     }),
   )
+
+  app.set("trust proxy", 1);
 
   app.use(
     cors({
