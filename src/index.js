@@ -30,6 +30,7 @@ const startServer = async () => {
   const app = express()
 
   app.disable('x-powered-by')
+  app.set('trust proxy', 1);
 
   app.use((req, _, next) => {
     const authorization = req.headers.authorization;
@@ -67,8 +68,6 @@ const startServer = async () => {
       },
     }),
   )
-
-  app.set("trust proxy", 1);
 
   app.use(
     cors({
