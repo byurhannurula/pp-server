@@ -30,7 +30,7 @@ const startServer = async () => {
   const app = express()
 
   // app.disable('x-powered-by')
-  // app.set('trust proxy', 1);
+  app.set('trust proxy', 1);
 
   app.use((req, _, next) => {
     const authorization = req.headers.authorization;
@@ -53,17 +53,17 @@ const startServer = async () => {
   app.use(
     session({
       store: new RedisStore({
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-        pass: process.env.REDIS_PASS,
+        host: 'redis-17631.c135.eu-central-1-1.ec2.cloud.redislabs.com',
+        port: 17631,
+        pass: 'iBEr94e1rXOFqPO8qEDtwwaxALbQfceh',
       }),
-      name: process.env.SESS_NAME,
-      secret: process.env.SESS_SECRET,
+      name: 'cid',
+      secret: 'daswe?sidyt!dyn',
       saveUninitialized: false,
-      // rolling: true,
       resave: false,
       cookie: {
         // sameSite: true,
+        httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24,
         secure: false
       },
