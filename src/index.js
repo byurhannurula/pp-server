@@ -65,19 +65,20 @@ const startServer = async () => {
         sameSite: true,
         maxAge: 1000 * 60 * 60 * 24,
         secure: false,
+        domain: '.herokuapp.com'
       },
     }),
   )
 
-  app.use(
-    cors({
-      credentials: true,
-      origin:
-        process.env.NODE_ENV === 'production'
-          ? process.env.FRONT_END_URL
-          : 'http://localhost:3000',
-    }),
-  )
+  // app.use(
+  //   cors({
+  //     credentials: true,
+  //     origin:
+  //       process.env.NODE_ENV === 'production'
+  //         ? process.env.FRONT_END_URL
+  //         : 'http://localhost:3000',
+  //   }),
+  // )
 
   const corsOptions = {
     credentials: true,
