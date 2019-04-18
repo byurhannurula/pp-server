@@ -56,7 +56,7 @@ export default {
 
       return user
     },
-    signIn: async (parent, { email, password }, { req }, info) => {
+    signIn: async (parent, args, { req }, info) => {
       // validation
       await Joi.validate(args, loginSchema, {
         abortEarly: false,
