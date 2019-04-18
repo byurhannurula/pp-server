@@ -56,7 +56,7 @@ export default {
 
       return user
     },
-    signIn: async (parent, {email, password}, { req }, info) => {
+    signIn: async (parent, { email, password }, { req }, info) => {
       // validation
       // await Joi.validate(args, loginSchema, {
       //   abortEarly: false,
@@ -66,20 +66,21 @@ export default {
       //   return User.findById(req.session.userId)
       // }
 
-      const user = await User.findOne( { email: email } )
-      
+      const user = await User.findOne({ email: email })
+
       if (!user) {
-        return null;
+        return null
       }
 
-
       if (!(await user.matchesPassword(password))) {
-        return null;
+        return null
       }
 
       // const user = await auth.attemptSignIn(args.email, args.password)
+      console.log(req.session)
 
       req.session.userId = user.id
+      console.log(req.session)
 
       return user
     },
@@ -92,7 +93,7 @@ export default {
             console.log(err)
             return reject(false)
           }
-    
+
           res.clearCookie(process.env.SESS_NAME)
           return resolve(true)
         })

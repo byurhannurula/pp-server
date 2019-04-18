@@ -30,23 +30,23 @@ const startServer = async () => {
   const app = express()
 
   // app.disable('x-powered-by')
-  app.set('trust proxy', 1);
+  app.set('trust proxy', 1)
 
   app.use((req, _, next) => {
-    const authorization = req.headers.authorization;
+    const authorization = req.headers.authorization
 
     if (authorization) {
       try {
-        const cid = authorization.split(" ")[1];
-        req.headers.cookie = `cid=${cid}`;
-        console.log(cid);
-      } catch(err) {
+        const cid = authorization.split(' ')[1]
+        req.headers.cookie = `cid=${cid}`
+        console.log(cid)
+      } catch (err) {
         console.log(err)
       }
     }
 
-    return next();
-  });
+    return next()
+  })
 
   const RedisStore = connectRedis(session)
 
@@ -62,10 +62,10 @@ const startServer = async () => {
       saveUninitialized: false,
       resave: false,
       cookie: {
-        // sameSite: true,
+        path: '/',
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
-        secure: false
+        secure: false,
+        maxAge: null,
       },
     }),
   )
@@ -73,7 +73,7 @@ const startServer = async () => {
   app.use(
     cors({
       credentials: true,
-      origin: 
+      origin:
         process.env.NODE_ENV === 'production'
           ? process.env.FRONT_END_URL
           : 'http://localhost:3000',
