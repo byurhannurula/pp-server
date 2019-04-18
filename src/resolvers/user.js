@@ -62,21 +62,21 @@ export default {
         abortEarly: false,
       })
 
-      // if (req.session.userId) {
-      //   return User.findById(req.session.userId)
+      if (req.session.userId) {
+        return User.findById(req.session.userId)
+      }
+
+      // const user = await User.findOne({ email: email })
+
+      // if (!user) {
+      //   return null
       // }
 
-      const user = await User.findOne({ email: email })
+      // if (!(await user.matchesPassword(password))) {
+      //   return null
+      // }
 
-      if (!user) {
-        return null
-      }
-
-      if (!(await user.matchesPassword(password))) {
-        return null
-      }
-
-      // const user = await auth.attemptSignIn(args.email, args.password)
+      const user = await auth.attemptSignIn(args.email, args.password)
 
       req.session.userId = user.id
       console.log(req.session)
