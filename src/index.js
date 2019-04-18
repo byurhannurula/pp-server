@@ -30,23 +30,23 @@ const startServer = async () => {
   const app = express()
 
   app.disable('x-powered-by')
-  app.set('trust proxy', 1);
+  app.set('trust proxy', 1)
 
   app.use((req, _, next) => {
-    const authorization = req.headers.authorization;
+    const authorization = req.headers.authorization
 
     if (authorization) {
       try {
-        const cid = authorization.split(" ")[1];
-        req.headers.cookie = `cid=${cid}`;
-        console.log(cid);
-      } catch(err) {
+        const cid = authorization.split(' ')[1]
+        req.headers.cookie = `cid=${cid}`
+        console.log(cid)
+      } catch (err) {
         console.log(err)
       }
     }
 
-    return next();
-  });
+    return next()
+  })
 
   const RedisStore = connectRedis(session)
 
@@ -64,7 +64,7 @@ const startServer = async () => {
       cookie: {
         sameSite: true,
         maxAge: 1000 * 60 * 60 * 24,
-        secure: false
+        secure: false,
       },
     }),
   )
@@ -72,12 +72,20 @@ const startServer = async () => {
   app.use(
     cors({
       credentials: true,
-      origin: 
+      origin:
         process.env.NODE_ENV === 'production'
           ? process.env.FRONT_END_URL
           : 'http://localhost:3000',
     }),
   )
+
+  const corsOptions = {
+    credentials: true,
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? process.env.FRONT_END_URL
+        : 'http://localhost:3000',
+  }
 
   const server = new ApolloServer({
     typeDefs,
@@ -92,7 +100,7 @@ const startServer = async () => {
     context: ({ req, res }) => ({ req, res }),
   })
 
-  server.applyMiddleware({ app, cors: false })
+  server.applyMiddleware({ app, cors: corsOptions })
 
   app.listen({ port }, () =>
     console.log(
