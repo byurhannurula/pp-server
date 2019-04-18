@@ -10,33 +10,33 @@ import { loginSchema, registerSchema } from '../utils'
 export default {
   Query: {
     users: (parent, args, { req }, info) => {
-      auth.checkSignedIn(req)
+      // auth.checkSignedIn(req)
 
       return User.find({})
     },
     user: (parent, { id }, context, info) => {
-      auth.checkSignedIn(req)
+      // auth.checkSignedIn(req)
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new UserInputError(`User ID is not a valid Object ID!`)
-      }
+      // if (!mongoose.Types.ObjectId.isValid(id)) {
+      //   throw new UserInputError(`User ID is not a valid Object ID!`)
+      // }
 
       return User.findById(id)
     },
     me: (parent, args, { req }, info) => {
-      auth.checkSignedIn(req)
+      // auth.checkSignedIn(req)
 
       return User.findById(req.session.userId)
     },
   },
   Mutation: {
     signUp: async (parent, args, { req }, info) => {
-      auth.checkSignedOut(req)
+      // auth.checkSignedOut(req)
 
-      // validation
-      await Joi.validate(args, registerSchema, {
-        abortEarly: false,
-      })
+      // // validation
+      // await Joi.validate(args, registerSchema, {
+      //   abortEarly: false,
+      // })
 
       args.avatar = await gravatar.url(
         args.email,
@@ -56,26 +56,47 @@ export default {
 
       return user
     },
-    signIn: async (parent, args, { req }, info) => {
+    signIn: async (parent, {email, password}, { req }, info) => {
       // validation
-      await Joi.validate(args, loginSchema, {
-        abortEarly: false,
-      })
+      // await Joi.validate(args, loginSchema, {
+      //   abortEarly: false,
+      // })
 
-      if (req.session.userId) {
-        return User.findById(req.session.userId)
+      // if (req.session.userId) {
+      //   return User.findById(req.session.userId)
+      // }
+
+      const user = await User.findOne( { email: email } )
+      
+      if (!user) {
+        return null;
       }
 
-      const user = await auth.attemptSignIn(args.email, args.password)
+
+      if (!(await user.matchesPassword(password))) {
+        return null;
+      }
+
+      // const user = await auth.attemptSignIn(args.email, args.password)
 
       req.session.userId = user.id
 
       return user
     },
     signOut: (parent, args, { req, res }, info) => {
-      auth.checkSignedIn(req)
+      // auth.checkSignedIn(req)
 
-      return auth.signOut(req, res)
+      return new Promise((resolve, reject) => {
+        req.session.destroy(err => {
+          if (err) {
+            console.log(err)
+            return reject(false)
+          }
+    
+          res.clearCookie(process.env.SESS_NAME)
+          return resolve(true)
+        })
+      })
     },
   },
 }

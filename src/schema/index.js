@@ -18,7 +18,7 @@ const schema = gql`
 
   type Mutation {
     signUp(name: String!, email: String!, password: String!): User
-    signIn(email: String!, password: String!): User!
+    signIn(email: String!, password: String!): User
     signOut: Boolean
 
     createRoom(name: String!, cardValues: String!): Room!
