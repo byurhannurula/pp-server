@@ -60,10 +60,10 @@ const startServer = async () => {
       name: process.env.SESS_NAME,
       secret: process.env.SESS_SECRET,
       saveUninitialized: false,
-      rolling: true,
-      resave: true,
+      // rolling: true,
+      resave: false,
       cookie: {
-        sameSite: true,
+        // sameSite: true,
         maxAge: 1000 * 60 * 60 * 24,
         secure: false
       },
