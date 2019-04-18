@@ -29,43 +29,42 @@ const startServer = async () => {
 
   const app = express()
 
-  // app.disable('x-powered-by')
-  app.set('trust proxy', 1)
+  app.disable('x-powered-by')
+  app.set('trust proxy', 1);
 
   app.use((req, _, next) => {
-    const authorization = req.headers.authorization
+    const authorization = req.headers.authorization;
 
     if (authorization) {
       try {
-        const cid = authorization.split(' ')[1]
-        req.headers.cookie = `cid=${cid}`
-        console.log(cid)
-      } catch (err) {
+        const cid = authorization.split(" ")[1];
+        req.headers.cookie = `cid=${cid}`;
+        console.log(cid);
+      } catch(err) {
         console.log(err)
       }
     }
 
-    return next()
-  })
+    return next();
+  });
 
   const RedisStore = connectRedis(session)
 
   app.use(
     session({
       store: new RedisStore({
-        host: 'redis-17631.c135.eu-central-1-1.ec2.cloud.redislabs.com',
-        port: 17631,
-        pass: 'iBEr94e1rXOFqPO8qEDtwwaxALbQfceh',
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        pass: process.env.REDIS_PASS,
       }),
-      name: 'cid',
-      secret: 'daswe?sidyt!dyn',
+      name: process.env.SESS_NAME,
+      secret: process.env.SESS_SECRET,
       saveUninitialized: false,
       resave: false,
       cookie: {
-        path: '/',
-        httpOnly: true,
-        secure: false,
-        maxAge: null,
+        sameSite: true,
+        maxAge: 1000 * 60 * 60 * 24,
+        secure: false
       },
     }),
   )
@@ -73,7 +72,7 @@ const startServer = async () => {
   app.use(
     cors({
       credentials: true,
-      origin:
+      origin: 
         process.env.NODE_ENV === 'production'
           ? process.env.FRONT_END_URL
           : 'http://localhost:3000',

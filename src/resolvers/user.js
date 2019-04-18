@@ -33,10 +33,10 @@ export default {
     signUp: async (parent, args, { req }, info) => {
       // auth.checkSignedOut(req)
 
-      // // validation
-      // await Joi.validate(args, registerSchema, {
-      //   abortEarly: false,
-      // })
+      // validation
+      await Joi.validate(args, registerSchema, {
+        abortEarly: false,
+      })
 
       args.avatar = await gravatar.url(
         args.email,
@@ -58,9 +58,9 @@ export default {
     },
     signIn: async (parent, { email, password }, { req }, info) => {
       // validation
-      // await Joi.validate(args, loginSchema, {
-      //   abortEarly: false,
-      // })
+      await Joi.validate(args, loginSchema, {
+        abortEarly: false,
+      })
 
       // if (req.session.userId) {
       //   return User.findById(req.session.userId)
@@ -77,7 +77,6 @@ export default {
       }
 
       // const user = await auth.attemptSignIn(args.email, args.password)
-      console.log(req.session)
 
       req.session.userId = user.id
       console.log(req.session)
