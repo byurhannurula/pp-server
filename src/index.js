@@ -62,31 +62,22 @@ const startServer = async () => {
       saveUninitialized: false,
       resave: false,
       cookie: {
-        sameSite: true,
+        httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24,
         secure: false,
-        domain: '.herokuapp.com'
       },
     }),
   )
 
-  // app.use(
-  //   cors({
-  //     credentials: true,
-  //     origin:
-  //       process.env.NODE_ENV === 'production'
-  //         ? process.env.FRONT_END_URL
-  //         : 'http://localhost:3000',
-  //   }),
-  // )
-
-  const corsOptions = {
-    credentials: true,
-    origin:
-      process.env.NODE_ENV === 'production'
-        ? process.env.FRONT_END_URL
-        : 'http://localhost:3000',
-  }
+  app.use(
+    cors({
+      credentials: true,
+      origin:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONT_END_URL
+          : 'http://localhost:3000',
+    }),
+  )
 
   const server = new ApolloServer({
     typeDefs,
@@ -101,7 +92,7 @@ const startServer = async () => {
     context: ({ req, res }) => ({ req, res }),
   })
 
-  server.applyMiddleware({ app, cors: corsOptions })
+  server.applyMiddleware({ app, cors: false })
 
   app.listen({ port }, () =>
     console.log(
