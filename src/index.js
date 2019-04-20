@@ -18,12 +18,7 @@ const dev = process.env.NODE_ENV !== 'production'
 
 const startServer = async () => {
   await mongoose
-    .connect(
-      `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${
-        process.env.DB_HOST
-      }:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-      { useNewUrlParser: true },
-    )
+    .connect(process.env.DB_URL, { useNewUrlParser: true })
     .then(() => console.log(`🔗  MongoDB Connected...`))
     .catch(err => console.log(`❌  MongoDB Connection error: ${err}`))
 
@@ -63,7 +58,7 @@ const startServer = async () => {
       resave: false,
       cookie: {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
         secure: false,
       },
     }),

@@ -1,7 +1,5 @@
-import Joi from 'joi'
-import mongoose from 'mongoose'
 import gravatar from 'gravatar'
-import { UserInputError } from 'apollo-server-express'
+import bcrypt from 'bcrypt'
 
 import * as auth from '../auth'
 import { User } from '../models'
@@ -10,33 +8,30 @@ import { loginSchema, registerSchema } from '../utils'
 export default {
   Query: {
     users: (parent, args, { req }, info) => {
-      // auth.checkSignedIn(req)
+      auth.checkSignedIn(req)
 
       return User.find({})
     },
     user: (parent, { id }, context, info) => {
-      // auth.checkSignedIn(req)
-
-      // if (!mongoose.Types.ObjectId.isValid(id)) {
-      //   throw new UserInputError(`User ID is not a valid Object ID!`)
-      // }
+      auth.checkSignedIn(req)
 
       return User.findById(id)
     },
     me: (parent, args, { req }, info) => {
-      // auth.checkSignedIn(req)
+      auth.checkSignedIn(req)
 
       return User.findById(req.session.userId)
     },
   },
   Mutation: {
     signUp: async (parent, args, { req }, info) => {
-      // auth.checkSignedOut(req)
+      args.email = args.email.toLowerCase()
 
-      // validation
-      await Joi.validate(args, registerSchema, {
-        abortEarly: false,
-      })
+      try {
+        await registerSchema.validate(args, { abortEarly: false })
+      } catch (err) {
+        return err
+      }
 
       args.avatar = await gravatar.url(
         args.email,
@@ -49,44 +44,38 @@ export default {
         true,
       )
 
-      // if validation is true create user with args
+      args.password = await bcrypt.hash(args.password, 12)
       const user = await User.create(args)
-      // set user id to session.userId
+
       req.session.userId = user.id
 
       return user
     },
     signIn: async (parent, args, { req }, info) => {
-      // validation
-      await Joi.validate(args, loginSchema, {
-        abortEarly: false,
-      })
+      const { email, password } = args
+
+      try {
+        await loginSchema.validate(args, { abortEarly: false })
+      } catch (err) {
+        return err
+      }
 
       if (req.session.userId) {
         return User.findById(req.session.userId)
       }
 
-      // const user = await User.findOne({ email: email })
+      const user = await User.findOne({ email })
 
-      // if (!user) {
-      //   return null
-      // }
-
-      // if (!(await user.matchesPassword(password))) {
-      //   return null
-      // }
-
-      const user = await auth.attemptSignIn(args.email, args.password)
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        throw new Error('Incorrect email or password. Please try again.')
+      }
 
       req.session.userId = user.id
-      console.log(req.session)
 
       return user
     },
     signOut: (parent, args, { req, res }, info) => {
-      // auth.checkSignedIn(req)
-
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) =>
         req.session.destroy(err => {
           if (err) {
             console.log(err)
@@ -95,8 +84,8 @@ export default {
 
           res.clearCookie(process.env.SESS_NAME)
           return resolve(true)
-        })
-      })
+        }),
+      )
     },
   },
 }

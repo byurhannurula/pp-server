@@ -1,51 +1,29 @@
-import Joi from 'joi'
+import * as yup from 'yup'
 
-export const registerSchema = Joi.object().keys({
-  name: Joi.string()
-    .max(254)
-    .required()
-    .label('Name'),
-  email: Joi.string()
+export const registerSchema = yup.object().shape({
+  name: yup
+    .string()
+    .min(3)
+    .max(255),
+  email: yup
+    .string()
     .email()
-    .required()
-    .label('Email'),
-  password: Joi.string()
+    .min(3)
+    .max(255),
+  password: yup
+    .string()
     .min(8)
-    .max(60)
-    .required()
-    .regex(/^(?=\S*[a-z])(?=\S*[A-Z])(?=\S*\d).*$/)
-    .label('Passowrd')
-    .options({
-      language: {
-        string: {
-          regex: {
-            base:
-              'must contain at least 8 character, one uppercase, one lowercase and one digit!',
-          },
-        },
-      },
-    }),
+    .max(255),
 })
 
-export const loginSchema = Joi.object().keys({
-  email: Joi.string()
+export const loginSchema = yup.object().shape({
+  email: yup
+    .string()
     .email()
-    .required()
-    .label('Email'),
-  password: Joi.string()
+    .min(3)
+    .max(255),
+  password: yup
+    .string()
     .min(8)
-    .max(60)
-    .required()
-    .regex(/^(?=\S*[a-z])(?=\S*[A-Z])(?=\S*\d).*$/)
-    .label('Passowrd')
-    .options({
-      language: {
-        string: {
-          regex: {
-            base:
-              'must contain at least 8 character, one uppercase, one lowercase and one digit!',
-          },
-        },
-      },
-    }),
+    .max(255),
 })
