@@ -16,6 +16,7 @@
     "express-session": "^1.15.6",
     "graphql": "^14.0.2",
     "gravatar": "^1.8.0",
+    "ioredis": "^4.9.0",
     "mongoose": "^5.4.2",
     "yup": "^0.27.0"
   },

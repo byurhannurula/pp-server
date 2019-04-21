@@ -1,4 +1,5 @@
 import cors from 'cors'
+import Redis from 'ioredis'
 import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
@@ -16,6 +17,8 @@ dotenv.config({
 const port = process.env.PORT || 4000
 const dev = process.env.NODE_ENV !== 'production'
 
+const RedisStore = connectRedis(session)
+
 const startServer = async () => {
   await mongoose
     .connect(process.env.DB_URL, { useNewUrlParser: true })
@@ -24,8 +27,31 @@ const startServer = async () => {
 
   const app = express()
 
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    playground: !dev
+      ? false
+      : {
+          settings: {
+            'request.credentials': 'include',
+          },
+        },
+    context: ({ req, res }) => ({ req, res }),
+  })
+
   app.disable('x-powered-by')
   app.set('trust proxy', 1)
+
+  app.use(
+    cors({
+      credentials: true,
+      origin:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONT_END_URL
+          : 'http://localhost:3000',
+    }),
+  )
 
   app.use((req, _, next) => {
     const authorization = req.headers.authorization
@@ -43,14 +69,13 @@ const startServer = async () => {
     return next()
   })
 
-  const RedisStore = connectRedis(session)
-
   app.use(
     session({
       store: new RedisStore({
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-        pass: process.env.REDIS_PASS,
+        client:
+          process.env.NODE_ENV === 'production'
+            ? new Redis(process.env.REDISCLOUD_URL)
+            : new Redis(),
       }),
       name: process.env.SESS_NAME,
       secret: process.env.SESS_SECRET,
@@ -58,34 +83,11 @@ const startServer = async () => {
       resave: false,
       cookie: {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         secure: false,
       },
     }),
   )
-
-  app.use(
-    cors({
-      credentials: true,
-      origin:
-        process.env.NODE_ENV === 'production'
-          ? process.env.FRONT_END_URL
-          : 'http://localhost:3000',
-    }),
-  )
-
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    playground: !dev
-      ? false
-      : {
-          settings: {
-            'request.credentials': 'include',
-          },
-        },
-    context: ({ req, res }) => ({ req, res }),
-  })
 
   server.applyMiddleware({ app, cors: false })
 
