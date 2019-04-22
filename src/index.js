@@ -72,10 +72,9 @@ const startServer = async () => {
   app.use(
     session({
       store: new RedisStore({
-        client:
-          process.env.NODE_ENV === 'production'
-            ? new Redis(process.env.REDISCLOUD_URL)
-            : new Redis(),
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        pass: process.env.REDIS_PASS,
       }),
       name: process.env.SESS_NAME,
       secret: process.env.SESS_SECRET,

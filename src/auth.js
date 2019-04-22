@@ -3,6 +3,13 @@ import { User } from './models'
 
 const signedIn = req => req.session.userId
 
+export const isAuthenticated = req => {
+  if (!req || !req.session || !req.session.userId) {
+    // user is not logged in
+    throw new Error('Not authenticated!')
+  }
+}
+
 export const checkSignedIn = req => {
   if (!signedIn(req)) {
     throw new AuthenticationError(`You must be signed in!`)
@@ -25,15 +32,3 @@ export const signOut = (req, res) =>
       resolve(true)
     })
   })
-
-export const attemptSignIn = async (email, password) => {
-  const user = await User.findOne({ email })
-
-  if (!user || !(await user.matchesPassword(password))) {
-    throw new AuthenticationError(
-      'Incorrect email or password. Please try again.',
-    )
-  }
-
-  return user
-}

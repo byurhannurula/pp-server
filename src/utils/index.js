@@ -1,1 +1,1 @@
-export * from './validationSchemas'
+export * from './yupSchemas'

@@ -1,30 +1,32 @@
 import gravatar from 'gravatar'
 import bcrypt from 'bcrypt'
 
-import * as auth from '../auth'
 import { User } from '../models'
+import { isAuthenticated, signOut } from '../auth'
 import { loginSchema, registerSchema } from '../utils'
 
 export default {
   Query: {
     users: (parent, args, { req }, info) => {
-      auth.checkSignedIn(req)
+      isAuthenticated(req)
 
       return User.find({})
     },
     user: (parent, { id }, context, info) => {
-      auth.checkSignedIn(req)
+      isAuthenticated(req)
 
       return User.findById(id)
     },
     me: (parent, args, { req }, info) => {
-      auth.checkSignedIn(req)
+      isAuthenticated(req)
 
       return User.findById(req.session.userId)
     },
   },
   Mutation: {
     signUp: async (parent, args, { req }, info) => {
+      // isAuthenticated(req)
+
       args.email = args.email.toLowerCase()
 
       try {
@@ -52,16 +54,14 @@ export default {
       return user
     },
     signIn: async (parent, args, { req }, info) => {
+      // isAuthenticated(req)
+
       const { email, password } = args
 
       try {
         await loginSchema.validate(args, { abortEarly: false })
       } catch (err) {
         return err
-      }
-
-      if (req.session.userId) {
-        return User.findById(req.session.userId)
       }
 
       const user = await User.findOne({ email })
@@ -75,17 +75,7 @@ export default {
       return user
     },
     signOut: (parent, args, { req, res }, info) => {
-      return new Promise((resolve, reject) =>
-        req.session.destroy(err => {
-          if (err) {
-            console.log(err)
-            return reject(false)
-          }
-
-          res.clearCookie(process.env.SESS_NAME)
-          return resolve(true)
-        }),
-      )
+      return signOut(req, res)
     },
   },
 }

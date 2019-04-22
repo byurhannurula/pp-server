@@ -1,6 +1,3 @@
-import mongoose from 'mongoose'
-import { UserInputError } from 'apollo-server-express'
-
 import * as auth from '../auth'
 import { Room, User } from '../models'
 
@@ -14,19 +11,17 @@ export default {
     room: (parent, { id }, { req }, info) => {
       auth.checkSignedIn(req)
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new UserInputError(`Room ID is not a valid Object ID!`)
-      }
-
       return Room.findById(id)
     },
   },
   Mutation: {
-    createRoom: async (parent, args, { req }, info) => {
+    startRoom: async (parent, args, { req }, info) => {
       auth.checkSignedIn(req)
 
       const room = await Room.create(args)
+      
       User.createdRooms.push(args.id)
+
       return room
     },
     updateRoom: async (parent, args, { req }, info) => {
