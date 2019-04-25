@@ -19,7 +19,7 @@ export default {
       auth.checkSignedIn(req)
 
       const room = await Room.create(args)
-      
+
       User.createdRooms.push(args.id)
 
       return room

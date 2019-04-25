@@ -42,6 +42,9 @@ export const loginSchema = yup.object().shape({
 })
 
 export const startRoom = yup.object().shape({
-  title: yup.string().min(3).max(255).label('Title'),
-  
+  title: yup
+    .string()
+    .min(3)
+    .max(255)
+    .label('Title'),
 })

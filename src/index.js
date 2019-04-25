@@ -1,14 +1,16 @@
 import cors from 'cors'
-import Redis from 'ioredis'
 import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
+import passport from 'passport'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
 import { ApolloServer } from 'apollo-server-express'
 
 import typeDefs from './schema'
 import resolvers from './resolvers'
+
+const passportSetup = require('./config/passport')
 
 dotenv.config({
   path: `.env.${process.env.NODE_ENV}`,
@@ -60,7 +62,6 @@ const startServer = async () => {
       try {
         const cid = authorization.split(' ')[1]
         req.headers.cookie = `cid=${cid}`
-        console.log(cid)
       } catch (err) {
         console.log(err)
       }
@@ -86,6 +87,52 @@ const startServer = async () => {
         secure: false,
       },
     }),
+  )
+
+  app.use(passport.initialize())
+
+  app.get('/auth/github', passport.authenticate('github', { session: false }))
+
+  app.get(
+    '/auth/github/redirect',
+    passport.authenticate('github', {
+      session: false,
+      failureRedirect: '/login',
+    }),
+    (req, res) => {
+      if (req.user.user.id && req.session) {
+        req.session.userId = req.user.user.id
+        req.session.accessToken = req.user.accessToken
+        req.session.refreshToken = req.user.refreshToken
+      }
+
+      res.redirect(process.env.FRONT_END_URL)
+    },
+  )
+
+  app.get(
+    '/auth/google',
+    passport.authenticate('google', {
+      session: false,
+      scope: ['profile', 'email'],
+    }),
+  )
+
+  app.get(
+    '/auth/google/redirect',
+    passport.authenticate('google', {
+      session: false,
+      failureRedirect: '/login',
+    }),
+    (req, res) => {
+      if (req.user.user.id && req.session) {
+        req.session.userId = req.user.user.id
+        req.session.accessToken = req.user.accessToken
+        req.session.refreshToken = req.user.refreshToken
+      }
+
+      res.redirect(process.env.FRONT_END_URL)
+    },
   )
 
   server.applyMiddleware({ app, cors: false })
