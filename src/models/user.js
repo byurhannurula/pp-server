@@ -3,10 +3,10 @@ import mongoose, { Schema } from 'mongoose'
 const userSchema = new Schema(
   {
     name: String,
-    email: {
-      type: String,
-    },
+    email: String,
     password: String,
+    googleId: String,
+    githubId: String,
     avatar: String,
     createdRooms: [
       {
