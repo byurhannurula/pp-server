@@ -3,17 +3,14 @@ import { gql } from 'apollo-server-express'
 const schema = gql`
   type Query {
     me: User
-    user(id: ID!): User
-    users: [User!]!
+    getUser(id: ID!): User
+    getUsers: [User!]
 
-    room(id: ID!): Room
-    rooms: [Room!]!
+    getSession(id: ID!): Session
+    getSessions: [Session]
 
-    story(id: ID!): Story
-    stories: [Story!]!
-
-    vote(id: ID!): User
-    votes: [Vote!]!
+    getPoll(id: ID!): Poll
+    getPolls: [Poll]
   }
 
   type Mutation {
@@ -21,51 +18,50 @@ const schema = gql`
     signIn(email: String!, password: String!): User!
     signOut: Boolean
 
-    createRoom(name: String!, cardValues: String!): Room!
-    updateRoom(id: ID!, name: String!, cardValues: String): Room!
-    deleteRoom(id: ID!): Room
-
-    createStory(topic: String!): Story
-    updateStory(id: ID!): Story
-    deleteStory(id: ID!): Story
-
-    vote: Vote
+    startSession(name: String!, cardSet: String): Session!
   }
 
   type User {
     id: ID!
     name: String!
+    bio: String
     email: String!
-    password: String!
     avatar: String
-    createdRooms: [Room!]
+    password: String!
+    socialLinks: String
+    sessions: [Session!]
     createdAt: String!
     updatedAt: String!
   }
 
-  type Room {
+  type Session {
     id: ID!
     name: String!
-    cardValues: String!
+    cardSet: String!
     createdBy: User!
-    users: [User]
-    date: String!
+    polls: [Poll]
+    members: [User]
     createdAt: String!
     updatedAt: String!
   }
 
-  type Story {
+  type Poll {
     id: ID!
     topic: String!
-    creator: User!
-    startTime: Int
-    endTime: Int
+    description: String!
+    session: Session!
+    votes: [Vote]
     result: Int
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Vote {
     id: ID!
-    value: String!
+    value: Int!
+    poll: Poll!
+    result: Int!
+    member: User!
   }
 `
 

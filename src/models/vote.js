@@ -2,7 +2,15 @@ import mongoose, { Schema } from 'mongoose'
 
 const voteSchema = new Schema(
   {
-    value: String,
+    value: Number,
+    poll: {
+      type: Schema.Types.ObjectId,
+      ref: 'Poll',
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     timestamps: true,

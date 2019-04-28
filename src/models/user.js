@@ -3,15 +3,21 @@ import mongoose, { Schema } from 'mongoose'
 const userSchema = new Schema(
   {
     name: String,
+    bio: String,
     email: String,
     password: String,
     googleId: String,
     githubId: String,
     avatar: String,
-    createdRooms: [
+    sessions: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Room',
+        ref: 'Session',
+      },
+    ],
+    socialLinks: [
+      {
+        type: String,
       },
     ],
   },

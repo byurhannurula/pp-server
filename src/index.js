@@ -9,8 +9,9 @@ import { ApolloServer } from 'apollo-server-express'
 
 import typeDefs from './schema'
 import resolvers from './resolvers'
+import * as models from './models'
 
-const passportSetup = require('./config/passport')
+require('./config/passport')
 
 dotenv.config({
   path: `.env.${process.env.NODE_ENV}`,
@@ -24,11 +25,10 @@ const RedisStore = connectRedis(session)
 const startServer = async () => {
   await mongoose
     .connect(process.env.DB_URL, { useNewUrlParser: true })
-    .then(() => console.log(`🔗  MongoDB Connected...`))
-    .catch(err => console.log(`❌  MongoDB Connection error: ${err}`))
+    .then(() => console.log(`🔗  MongoDB Connected!`))
+    .catch(err => console.log(`❌  MongoDB error: ${err}`))
 
   const app = express()
-
   const server = new ApolloServer({
     typeDefs,
     resolvers,
@@ -37,23 +37,14 @@ const startServer = async () => {
       : {
           settings: {
             'request.credentials': 'include',
+            // 'editor.theme': 'light',
           },
         },
-    context: ({ req, res }) => ({ req, res }),
+    context: ({ req, res }) => ({ req, res, models }),
   })
 
   app.disable('x-powered-by')
   app.set('trust proxy', 1)
-
-  app.use(
-    cors({
-      credentials: true,
-      origin:
-        process.env.NODE_ENV === 'production'
-          ? process.env.FRONT_END_URL
-          : 'http://localhost:3000',
-    }),
-  )
 
   app.use((req, _, next) => {
     const authorization = req.headers.authorization
@@ -62,9 +53,7 @@ const startServer = async () => {
       try {
         const cid = authorization.split(' ')[1]
         req.headers.cookie = `cid=${cid}`
-      } catch (err) {
-        console.log(err)
-      }
+      } catch (_) {}
     }
 
     return next()
@@ -83,9 +72,15 @@ const startServer = async () => {
       resave: false,
       cookie: {
         httpOnly: true,
+        secure: !dev ? true : false,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-        secure: false,
       },
+    }),
+  )
+  app.use(
+    cors({
+      credentials: true,
+      origin: !dev ? process.env.FRONTEND_URL : 'http://localhost:3000',
     }),
   )
 
@@ -106,7 +101,7 @@ const startServer = async () => {
         req.session.refreshToken = req.user.refreshToken
       }
 
-      res.redirect(process.env.FRONT_END_URL)
+      res.redirect(process.env.FRONTEND_URL)
     },
   )
 
@@ -131,7 +126,7 @@ const startServer = async () => {
         req.session.refreshToken = req.user.refreshToken
       }
 
-      res.redirect(process.env.FRONT_END_URL)
+      res.redirect(process.env.FRONTEND_URL)
     },
   )
 
