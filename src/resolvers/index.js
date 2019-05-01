@@ -12,7 +12,7 @@ export default {
 
       return models.User.findById(req.session.userId)
     },
-    getUser: (parent, { id }, { models }, info) => {
+    getUser: (parent, { id }, { req, models }, info) => {
       isAuthenticated(req)
 
       return models.User.findById(id)
@@ -32,7 +32,7 @@ export default {
     getSessions: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
 
-      const sessions = await models.Session.find({}).sort({createdAt: 'desc'})
+      const sessions = await models.Session.find({}).sort({ createdAt: 'desc' })
       return sessions
     },
   },
@@ -93,6 +93,34 @@ export default {
     signOut: (parent, args, { req, res }, info) => {
       return signOut(req, res)
     },
+    updateUser: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      args.avatar = await gravatar.url(
+        args.email,
+        {
+          protocol: 'https',
+          s: '200', // Size
+          r: 'pg', // Rating
+          d: 'identicon',
+        },
+        true,
+      )
+
+      const updatedUser = await models.User.findOneAndUpdate(
+        { _id: args.id },
+        {
+          name: args.name,
+          bio: args.bio,
+          email: args.email,
+          avatar: args.avatar,
+          password: args.password,
+          updatedAt: Date(),
+        },
+      )
+
+      return updatedUser
+    },
 
     // Sessions
     startSession: async (parent, { name, cardSet }, { req, models }, info) => {
@@ -103,6 +131,7 @@ export default {
         name,
         cardSet,
         createdBy: userId,
+        members: userId,
       })
 
       await models.User.updateMany(
@@ -112,7 +141,30 @@ export default {
         },
       )
 
+      console.log(session)
+
       return session
+    },
+    updateSession: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      const updatedSession = await models.Session.findOneAndUpdate(
+        { _id: args.id },
+        {
+          name: args.name,
+          cardSet: args.cardSet,
+          updatedAt: Date(),
+        },
+      )
+
+      return updatedSession
+    },
+    deleteSession: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      await models.Session.findOneAndRemove({ _id: args.id })
+
+      return { message: 'Session deleted successfully!' }
     },
   },
   User: {

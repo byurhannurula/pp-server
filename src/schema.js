@@ -7,7 +7,7 @@ const schema = gql`
     getUsers: [User!]
 
     getSession(id: ID!): Session
-    getSessions: [Session]
+    getSessions: [Session!]
 
     getPoll(id: ID!): Poll
     getPolls: [Poll]
@@ -17,8 +17,18 @@ const schema = gql`
     signUp(name: String!, email: String!, password: String!): User
     signIn(email: String!, password: String!): User!
     signOut: Boolean
+    updateUser(
+      id: String!
+      name: String
+      bio: String
+      email: String
+      avatar: String
+      password: String
+    ): User
 
-    startSession(name: String!, cardSet: String): Session!
+    startSession(name: String!, cardSet: String, polls: String): Session!
+    updateSession(id: String!, name: String, cardSet: String): Session
+    deleteSession(id: String!): SuccessMessage
   }
 
   type User {
@@ -62,6 +72,10 @@ const schema = gql`
     poll: Poll!
     result: Int!
     member: User!
+  }
+
+  type SuccessMessage {
+    message: String
   }
 `
 
