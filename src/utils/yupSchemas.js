@@ -34,9 +34,20 @@ export const loginSchema = yup.object().shape({
 })
 
 export const startSession = yup.object().shape({
-  title: yup
+  name: yup
     .string()
-    .min(3)
     .max(255)
+    .required()
     .label('Title'),
+})
+
+export const pollSchema = yup.object().shape({
+  topic: yup
+    .string()
+    .required()
+    .label('Topic'),
+  // description: yup
+  //   .string()
+  //   .required()
+  //   .label('Description'),
 })

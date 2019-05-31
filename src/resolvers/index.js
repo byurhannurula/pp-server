@@ -2,7 +2,7 @@ import gravatar from 'gravatar'
 import bcrypt from 'bcrypt'
 
 import { isAuthenticated, signOut } from '../utils/auth'
-import { loginSchema, registerSchema } from '../utils'
+import { loginSchema, registerSchema, pollSchema } from '../utils'
 
 export default {
   Query: {
@@ -34,6 +34,20 @@ export default {
 
       const sessions = await models.Session.find({}).sort({ createdAt: 'desc' })
       return sessions
+    },
+
+    // Polls
+    getPoll: (parent, { id }, { req, models }, info) => {
+      isAuthenticated(req)
+
+      return models.Poll.findById(id)
+    },
+    getPolls: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      const polls = await models.Poll.find({})
+
+      return polls
     },
   },
   Mutation: {
@@ -123,7 +137,12 @@ export default {
     },
 
     // Sessions
-    startSession: async (parent, { name, cardSet }, { req, models }, info) => {
+    startSession: async (
+      parent,
+      { name, cardSet, polls },
+      { req, models },
+      info,
+    ) => {
       isAuthenticated(req)
       const { userId } = req.session
 
@@ -140,8 +159,6 @@ export default {
           $push: { sessions: session },
         },
       )
-
-      console.log(session)
 
       return session
     },
@@ -166,6 +183,35 @@ export default {
 
       return { message: 'Session deleted successfully!' }
     },
+
+    // Polls
+    addPoll: async (parent, args, { req, models }, info) => {
+      // const isOwner = req.session.userId ===
+
+      try {
+        await pollSchema.validate(args, { abortEarly: false })
+      } catch (err) {
+        return err
+      }
+
+      const poll = await models.Poll.create(args)
+
+      const { sessionId } = args
+
+      await models.Session.updateOne(
+        { _id: sessionId },
+        { $push: { polls: poll } },
+      )
+
+      return poll
+    },
+    deletePoll: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      await models.Poll.findOneAndDelete({ _id: args.id })
+
+      return { message: 'Poll deleted successfully!' }
+    },
   },
   User: {
     sessions: async (user, args, { req }, info) => {
@@ -181,6 +227,10 @@ export default {
     members: async (session, args, { req }, info) => {
       // TODO: should not be able to list other ppl's sessions..!
       return (await session.populate('members').execPopulate()).members
+    },
+    polls: async (session, args, { req }, info) => {
+      // TODO: should not be able to list other ppl's sessions..!
+      return (await session.populate('polls').execPopulate()).polls
     },
   },
 }

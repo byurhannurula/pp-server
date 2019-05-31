@@ -28,7 +28,10 @@ const schema = gql`
 
     startSession(name: String!, cardSet: String, polls: String): Session!
     updateSession(id: String!, name: String, cardSet: String): Session
-    deleteSession(id: String!): SuccessMessage
+    deleteSession(id: String!): SuccessMessage!
+
+    addPoll(sessionId: String!, topic: String!, description: String): Poll!
+    deletePoll(id: String!): SuccessMessage!
   }
 
   type User {
@@ -58,7 +61,7 @@ const schema = gql`
   type Poll {
     id: ID!
     topic: String!
-    description: String!
+    description: String
     session: Session!
     votes: [Vote]
     result: Int
