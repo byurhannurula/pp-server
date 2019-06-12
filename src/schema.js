@@ -32,6 +32,9 @@ const schema = gql`
 
     addPoll(sessionId: String!, topic: String!, description: String): Poll!
     deletePoll(id: String!): SuccessMessage!
+
+    inviteMember(sessionId: String!, email: String!): SuccessMessage
+    deleteMember(sessionId: String!, email: String!): SuccessMessage
   }
 
   type User {

@@ -212,6 +212,63 @@ export default {
 
       return { message: 'Poll deleted successfully!' }
     },
+
+    inviteMember: async (
+      parent,
+      { sessionId, email },
+      { req, models },
+      info,
+    ) => {
+      isAuthenticated(req)
+
+      const user = await models.User.findOne({ email })
+
+      if (!user) return { message: `User with '${email}' email is not found!` }
+
+      await models.User.updateOne(
+        { _id: user.id },
+        {
+          $push: { sessions: sessionId },
+        },
+      )
+
+      await models.Session.findOneAndUpdate(
+        { _id: sessionId },
+        {
+          $push: { members: user.id },
+        },
+      )
+
+      return { message: 'User invited successfully!' }
+    },
+    deleteMember: async (
+      parent,
+      { sessionId, email },
+      { req, models },
+      info,
+    ) => {
+      isAuthenticated(req)
+
+      const user = await models.User.findOne({ email })
+
+      if (!user) return { message: `User with '${email}' email is not found!` }
+
+      await models.User.findOneAndUpdate(
+        { _id: user.id },
+        {
+          $pull: { sessions: sessionId },
+        },
+      )
+
+      await models.Session.findOneAndUpdate(
+        { _id: sessionId },
+        {
+          $pull: { members: user.id },
+        },
+      )
+
+      return { message: 'Member deleted successfully!' }
+    },
   },
   User: {
     sessions: async (user, args, { req }, info) => {
