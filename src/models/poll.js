@@ -5,6 +5,11 @@ const pollSchema = new Schema(
     topic: String,
     description: String,
     result: Number,
+    priority: {
+      type: String,
+      enum: ['M', 'S', 'C', 'W'],
+      default: 'M',
+    },
     session: {
       type: Schema.Types.ObjectId,
       ref: 'Session',

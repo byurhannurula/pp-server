@@ -11,6 +11,9 @@ const schema = gql`
 
     getPoll(id: ID!): Poll
     getPolls: [Poll]
+
+    getVote(id: ID!): Vote
+    getVotes: [Vote!]
   }
 
   type Mutation {
@@ -26,15 +29,20 @@ const schema = gql`
       password: String
     ): User
 
-    startSession(name: String!, cardSet: String, polls: String): Session!
-    updateSession(id: String!, name: String, cardSet: String): Session
-    deleteSession(id: String!): SuccessMessage!
+    startSession(name: String!, cardSet: String): Session!
+    updateSession(sessionId: String!, name: String, cardSet: String): Session
+    deleteSession(sessionId: String!): SuccessMessage!
 
     addPoll(sessionId: String!, topic: String!, description: String): Poll!
-    deletePoll(id: String!): SuccessMessage!
+    deletePoll(pollId: String!): SuccessMessage!
 
     inviteMember(sessionId: String!, email: String!): SuccessMessage
-    deleteMember(sessionId: String!, email: String!): SuccessMessage
+    deleteMember(sessionId: String!, userId: String!): SuccessMessage
+
+    addVote(pollId: String!, userId: String!, value: Int!): Vote
+    deleteVote(voteId: String!): SuccessMessage
+
+    updatePollPriority(pollId: String!, priority: String): Poll
   }
 
   type User {
@@ -66,8 +74,9 @@ const schema = gql`
     topic: String!
     description: String
     session: Session!
-    votes: [Vote]
+    votes: [Vote]!
     result: Int
+    priority: String
     createdAt: String!
     updatedAt: String!
   }
@@ -76,8 +85,7 @@ const schema = gql`
     id: ID!
     value: Int!
     poll: Poll!
-    result: Int!
-    member: User!
+    user: User
   }
 
   type SuccessMessage {

@@ -37,10 +37,10 @@ export default {
     },
 
     // Polls
-    getPoll: (parent, { id }, { req, models }, info) => {
+    getPoll: async (parent, { id }, { req, models }, info) => {
       isAuthenticated(req)
 
-      return models.Poll.findById(id)
+      return await models.Poll.findById(id)
     },
     getPolls: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
@@ -49,8 +49,23 @@ export default {
 
       return polls
     },
+
+    // Votes
+    getVote: async (parent, { id }, { req, models }, info) => {
+      isAuthenticated(req)
+
+      return await models.Vote.findById(id)
+    },
+    getVotes: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      const votes = await models.Vote.find({})
+
+      return votes
+    },
   },
   Mutation: {
+    // Users
     signUp: async (parent, args, { req, models }, info) => {
       args.email = args.email.toLowerCase()
 
@@ -137,14 +152,11 @@ export default {
     },
 
     // Sessions
-    startSession: async (
-      parent,
-      { name, cardSet, polls },
-      { req, models },
-      info,
-    ) => {
+    startSession: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
+
       const { userId } = req.session
+      const { name, cardSet } = args
 
       const session = await models.Session.create({
         name,
@@ -155,9 +167,7 @@ export default {
 
       await models.User.updateMany(
         { _id: { $in: userId } },
-        {
-          $push: { sessions: session },
-        },
+        { $push: { sessions: session } },
       )
 
       return session
@@ -165,38 +175,43 @@ export default {
     updateSession: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
 
+      const { sessionId, name, cardSet } = args
+
+      const session = await models.Session.findById(sessionId)
+
+      if (!session) return null
+
       const updatedSession = await models.Session.findOneAndUpdate(
-        { _id: args.id },
+        { _id: sessionId },
         {
-          name: args.name,
-          cardSet: args.cardSet,
+          name: name,
+          cardSet: cardSet,
           updatedAt: Date(),
         },
       )
 
       return updatedSession
     },
-    deleteSession: async (parent, args, { req, models }, info) => {
+    deleteSession: async (parent, { sessionId }, { req, models }, info) => {
       isAuthenticated(req)
 
-      await models.Session.findOneAndRemove({ _id: args.id })
+      const session = await models.Session.findById(sessionId)
+
+      if (!session)
+        return { message: `Session with id ${sessionId} is not found!` }
+
+      await models.Session.findOneAndRemove({ _id: sessionId })
 
       return { message: 'Session deleted successfully!' }
     },
 
     // Polls
     addPoll: async (parent, args, { req, models }, info) => {
-      // const isOwner = req.session.userId ===
-
-      try {
-        await pollSchema.validate(args, { abortEarly: false })
-      } catch (err) {
-        return err
-      }
-
-      const poll = await models.Poll.create(args)
+      isAuthenticated(req)
 
       const { sessionId } = args
+
+      const poll = await models.Poll.create(args)
 
       await models.Session.updateOne(
         { _id: sessionId },
@@ -205,89 +220,138 @@ export default {
 
       return poll
     },
-    deletePoll: async (parent, args, { req, models }, info) => {
+    deletePoll: async (parent, { pollId }, { req, models }, info) => {
       isAuthenticated(req)
 
-      await models.Poll.findOneAndDelete({ _id: args.id })
+      const poll = await models.Poll.findById(pollId)
+
+      if (!poll) return { message: `Poll with id ${pollId} is not found!` }
+
+      await models.Poll.findOneAndDelete({ _id: pollId })
 
       return { message: 'Poll deleted successfully!' }
     },
 
-    inviteMember: async (
-      parent,
-      { sessionId, email },
-      { req, models },
-      info,
-    ) => {
+    // Adding Members
+    inviteMember: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
+
+      const { sessionId, email } = args
 
       const user = await models.User.findOne({ email })
 
-      if (!user) return { message: `User with '${email}' email is not found!` }
+      if (!user) return { message: `User with '${email}' is not found!` }
 
       await models.User.updateOne(
         { _id: user.id },
-        {
-          $push: { sessions: sessionId },
-        },
+        { $push: { sessions: sessionId } },
       )
 
       await models.Session.findOneAndUpdate(
         { _id: sessionId },
-        {
-          $push: { members: user.id },
-        },
+        { $push: { members: user.id } },
       )
 
       return { message: 'User invited successfully!' }
     },
-    deleteMember: async (
-      parent,
-      { sessionId, email },
-      { req, models },
-      info,
-    ) => {
+    deleteMember: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
 
-      const user = await models.User.findOne({ email })
+      const { sessionId, userId } = args
 
-      if (!user) return { message: `User with '${email}' email is not found!` }
+      const user = await models.User.findById(userId)
+
+      if (!user) return { message: `User with '${id}' is not found!` }
 
       await models.User.findOneAndUpdate(
-        { _id: user.id },
-        {
-          $pull: { sessions: sessionId },
-        },
+        { _id: userId },
+        { $pull: { sessions: sessionId } },
       )
 
       await models.Session.findOneAndUpdate(
         { _id: sessionId },
-        {
-          $pull: { members: user.id },
-        },
+        { $pull: { members: userId } },
       )
 
       return { message: 'Member deleted successfully!' }
     },
+
+    // Votes
+    addVote: async (parent, args, { req, models }, info) => {
+      isAuthenticated(req)
+
+      // Check is user/poll id valid
+      const { pollId, userId, value } = args
+
+      const poll = await models.Poll.findById(pollId)
+      const user = await models.User.findById(userId)
+
+      if (!poll) return null
+
+      if (!user) return null
+
+      // Create vote
+      const vote = await models.Vote.create({
+        poll: pollId,
+        user: userId,
+        value: value,
+      })
+
+      // Add new vote to poll
+      await models.Poll.findOneAndUpdate(
+        { _id: pollId },
+        { $push: { votes: vote } },
+      )
+
+      const voteCount = await models.Vote.countDocuments()
+
+      console.log(`votes: ${voteCount}`)
+
+      return vote
+    },
+    deleteVote: async (parent, { voteId }, { req, models }, info) => {
+      isAuthenticated(req)
+
+      const vote = await models.Vote.findById(voteId)
+
+      if (!vote) return { message: `Vote with id ${voteId} is not found!` }
+
+      await models.Vote.findOneAndDelete({ _id: voteId })
+
+      return { message: 'Vote deleted successfully!' }
+    },
   },
   User: {
     sessions: async (user, args, { req }, info) => {
-      // TODO: should not be able to list other ppl's sessions..!
+      // TODO: should not be able to list other ppl's sessions/polls/votes..!
       return (await user.populate('sessions').execPopulate()).sessions
     },
   },
   Session: {
     createdBy: async (session, args, { req }, info) => {
-      // TODO: should not be able to list other ppl's sessions..!
       return (await session.populate('createdBy').execPopulate()).createdBy
     },
     members: async (session, args, { req }, info) => {
-      // TODO: should not be able to list other ppl's sessions..!
       return (await session.populate('members').execPopulate()).members
     },
     polls: async (session, args, { req }, info) => {
-      // TODO: should not be able to list other ppl's sessions..!
       return (await session.populate('polls').execPopulate()).polls
+    },
+  },
+  Poll: {
+    session: async (poll, args, { req }, info) => {
+      return (await poll.populate('session').execPopulate()).session
+    },
+    votes: async (poll, args, { req }, info) => {
+      return (await poll.populate('votes').execPopulate()).votes
+    },
+  },
+  Vote: {
+    poll: async (vote, args, { req }, info) => {
+      return (await vote.populate('poll').execPopulate()).poll
+    },
+    user: async (vote, args, { req }, info) => {
+      return (await vote.populate('user').execPopulate()).user
     },
   },
 }
