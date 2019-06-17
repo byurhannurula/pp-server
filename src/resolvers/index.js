@@ -159,8 +159,8 @@ export default {
       const { name, cardSet } = args
 
       const session = await models.Session.create({
-        name,
-        cardSet,
+        name: name,
+        cardSet: cardSet,
         createdBy: userId,
         members: userId,
       })
