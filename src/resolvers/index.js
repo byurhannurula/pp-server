@@ -24,16 +24,15 @@ export default {
     },
 
     // Sessions
-    getSession: (parent, { id }, { req, models }, info) => {
+    getSession: async (parent, { id }, { req, models }, info) => {
       isAuthenticated(req)
 
-      return models.Session.findById(id)
+      return await models.Session.findById(id)
     },
-    getSessions: async (parent, args, { req, models }, info) => {
+    getSessions: async (parent, {orderBy}, { req, models }, info) => {
       isAuthenticated(req)
 
-      const sessions = await models.Session.find({}).sort({ createdAt: 'desc' })
-      return sessions
+      return await models.Session.find({}).sort({createdAt: orderBy})
     },
 
     // Polls
@@ -209,12 +208,10 @@ export default {
     addPoll: async (parent, args, { req, models }, info) => {
       isAuthenticated(req)
 
-      const { sessionId } = args
-
       const poll = await models.Poll.create(args)
 
       await models.Session.updateOne(
-        { _id: sessionId },
+        { _id: args.session },
         { $push: { polls: poll } },
       )
 
@@ -239,11 +236,20 @@ export default {
       const { sessionId, email } = args
 
       const user = await models.User.findOne({ email })
+      const session = await models.Session.findById(sessionId)
 
-      if (!user) return { message: `User with '${email}' is not found!` }
+      if (!session) {
+        return { message: `Session with '${sessionId}' is not found!` }
+      }
+      if (!user) {
+        return { message: `User with '${email}' is not found!` }
+      }
+      if (session.members.indexOf(user._id) !== -1) {
+        return { message: `User is already added!` }
+      }
 
       await models.User.updateOne(
-        { _id: user.id },
+        { _id: user._id },
         { $push: { sessions: sessionId } },
       )
 
@@ -260,8 +266,14 @@ export default {
       const { sessionId, userId } = args
 
       const user = await models.User.findById(userId)
+      const session = await models.Session.findById(sessionId)
 
-      if (!user) return { message: `User with '${id}' is not found!` }
+      if (!session) {
+        return { message: `Session with '${sessionId}' is not found!` }
+      }
+      if (!user) {
+        return { message: `User with '${userUd}' is not found!` }
+      }
 
       await models.User.findOneAndUpdate(
         { _id: userId },
@@ -287,7 +299,6 @@ export default {
       const user = await models.User.findById(userId)
 
       if (!poll) return null
-
       if (!user) return null
 
       // Create vote
@@ -302,10 +313,6 @@ export default {
         { _id: pollId },
         { $push: { votes: vote } },
       )
-
-      const voteCount = await models.Vote.countDocuments()
-
-      console.log(`votes: ${voteCount}`)
 
       return vote
     },

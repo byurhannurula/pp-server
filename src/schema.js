@@ -1,13 +1,18 @@
 import { gql } from 'apollo-server-express'
 
 const schema = gql`
+  enum OrderByInput {
+    ASC
+    DESC
+  }
+
   type Query {
     me: User
     getUser(id: ID!): User
     getUsers: [User!]
 
     getSession(id: ID!): Session
-    getSessions: [Session!]
+    getSessions(orderBy: OrderByInput): [Session!]!
 
     getPoll(id: ID!): Poll
     getPolls: [Poll]
@@ -33,7 +38,7 @@ const schema = gql`
     updateSession(sessionId: String!, name: String, cardSet: String): Session
     deleteSession(sessionId: String!): SuccessMessage!
 
-    addPoll(sessionId: String!, topic: String!, description: String): Poll!
+    addPoll(session: String!, topic: String!, description: String): Poll!
     deletePoll(pollId: String!): SuccessMessage!
 
     inviteMember(sessionId: String!, email: String!): SuccessMessage
@@ -53,7 +58,7 @@ const schema = gql`
     avatar: String
     password: String!
     socialLinks: String
-    sessions: [Session!]
+    sessions: [Session!]!
     createdAt: String!
     updatedAt: String!
   }
