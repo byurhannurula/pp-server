@@ -50,6 +50,10 @@ const schema = gql`
     updatePollPriority(pollId: String!, priority: String): Poll
   }
 
+  type Subscription {
+    userVoted: Vote
+  }
+
   type User {
     id: ID!
     name: String!

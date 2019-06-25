@@ -4,7 +4,14 @@ import bcrypt from 'bcrypt'
 import { isAuthenticated, signOut } from '../utils/auth'
 import { loginSchema, registerSchema, pollSchema } from '../utils'
 
+const USER_VOTED = 'USER_VOTED'
+
 export default {
+  Subscription: {
+    userVoted: {
+      subscribe: (_, __, { pubsub }) => pubsub.asyncIterator([USER_VOTED]),
+    },
+  },
   Query: {
     // Users
     me: (parent, args, { req, models }, info) => {
@@ -29,10 +36,10 @@ export default {
 
       return await models.Session.findById(id)
     },
-    getSessions: async (parent, {orderBy}, { req, models }, info) => {
+    getSessions: async (parent, { orderBy }, { req, models }, info) => {
       isAuthenticated(req)
 
-      return await models.Session.find({}).sort({createdAt: orderBy})
+      return await models.Session.find({}).sort({ createdAt: orderBy })
     },
 
     // Polls
@@ -289,7 +296,7 @@ export default {
     },
 
     // Votes
-    addVote: async (parent, args, { req, models }, info) => {
+    addVote: async (parent, args, { req, models, pubsub }, info) => {
       isAuthenticated(req)
 
       // Check is user/poll id valid
@@ -313,6 +320,10 @@ export default {
         { _id: pollId },
         { $push: { votes: vote } },
       )
+
+      pubsub.publish(USER_VOTED, {
+        userVoted: vote,
+      })
 
       return vote
     },

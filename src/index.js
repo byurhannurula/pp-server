@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
 import passport from 'passport'
+import { createServer } from 'http'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
 import { ApolloServer } from 'apollo-server-express'
@@ -10,12 +11,12 @@ import { ApolloServer } from 'apollo-server-express'
 import typeDefs from './schema'
 import resolvers from './resolvers'
 import * as models from './models'
+import { pubsub } from './pubsub'
+import passportAuth from './config/passportAuth'
 
 require('./config/passport')
 
-dotenv.config({
-  path: `.env.${process.env.NODE_ENV}`,
-})
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` })
 
 const port = process.env.PORT || 4000
 const dev = process.env.NODE_ENV !== 'production'
@@ -32,15 +33,12 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    playground: !dev
-      ? false
-      : {
-          settings: {
-            'request.credentials': 'include',
-            // 'editor.theme': 'light',
-          },
-        },
-    context: ({ req, res }) => ({ req, res, models }),
+    playground: {
+      settings: {
+        'request.credentials': 'include',
+      },
+    },
+    context: ({ req, res }) => ({ req, res, models, pubsub }),
   })
 
   app.disable('x-powered-by')
@@ -77,6 +75,7 @@ const startServer = async () => {
       },
     }),
   )
+
   app.use(
     cors({
       credentials: true,
@@ -85,58 +84,19 @@ const startServer = async () => {
   )
 
   app.use(passport.initialize())
-
-  app.get('/auth/github', passport.authenticate('github', { session: false }))
-
-  app.get(
-    '/auth/github/redirect',
-    passport.authenticate('github', {
-      session: false,
-      failureRedirect: '/login',
-    }),
-    (req, res) => {
-      if (req.user.user.id && req.session) {
-        req.session.userId = req.user.user.id
-        req.session.accessToken = req.user.accessToken
-        req.session.refreshToken = req.user.refreshToken
-      }
-
-      res.redirect(process.env.FRONTEND_URL)
-    },
-  )
-
-  app.get(
-    '/auth/google',
-    passport.authenticate('google', {
-      session: false,
-      scope: ['profile', 'email'],
-    }),
-  )
-
-  app.get(
-    '/auth/google/redirect',
-    passport.authenticate('google', {
-      session: false,
-      failureRedirect: '/login',
-    }),
-    (req, res) => {
-      if (req.user.user.id && req.session) {
-        req.session.userId = req.user.user.id
-        req.session.accessToken = req.user.accessToken
-        req.session.refreshToken = req.user.refreshToken
-      }
-
-      res.redirect(process.env.FRONTEND_URL)
-    },
-  )
+  passportAuth(app)
 
   server.applyMiddleware({ app, cors: false })
 
-  app.listen({ port }, () =>
+  const httpServer = createServer(app)
+  server.installSubscriptionHandlers(httpServer)
+
+  httpServer.listen({ port }, () => {
+    console.log(`— Server: http://localhost:${port}${server.graphqlPath}`)
     console.log(
-      `🚀  Server ready at http://localhost:${port}${server.graphqlPath}`,
-    ),
-  )
+      `— Subscriptions: ws://localhost:${port}${server.subscriptionsPath}`,
+    )
+  })
 }
 
 startServer()
