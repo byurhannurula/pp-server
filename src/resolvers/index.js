@@ -15,7 +15,7 @@ export default {
   Query: {
     // Users
     me: (parent, args, { req, models }, info) => {
-      isAuthenticated(req)
+      // isAuthenticated(req)
 
       return models.User.findById(req.session.userId)
     },
