@@ -33,11 +33,13 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    playground: {
-      settings: {
-        'request.credentials': 'include',
-      },
-    },
+    playground: !dev
+      ? false
+      : {
+          settings: {
+            'request.credentials': 'include',
+          },
+        },
     context: ({ req, res }) => ({ req, res, models, pubsub }),
   })
 
