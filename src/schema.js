@@ -19,6 +19,7 @@ const schema = gql`
 
     getVote(id: ID!): Vote
     getVotes: [Vote!]
+    getPollVotes(pollId: ID!): Poll!
   }
 
   type Mutation {
@@ -47,7 +48,8 @@ const schema = gql`
     addVote(pollId: String!, userId: String!, value: Int!): Vote
     deleteVote(voteId: String!): SuccessMessage
 
-    updatePollPriority(pollId: String!, priority: String): Poll
+    savePoll(pollId: String!, result: Float!): Poll!
+    updatePollPriority(pollId: String!, priority: String): SuccessMessage
   }
 
   type Subscription {
@@ -84,7 +86,7 @@ const schema = gql`
     description: String
     session: Session!
     votes: [Vote]!
-    result: Int
+    result: Float
     priority: String
     createdAt: String!
     updatedAt: String!

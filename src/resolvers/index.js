@@ -69,6 +69,13 @@ export default {
 
       return votes
     },
+    getPollVotes: async (parent, { pollId }, { req, models }, info) => {
+      isAuthenticated(req)
+
+      const votes = await models.Poll.findById(pollId).select('votes')
+
+      return votes
+    },
   },
   Mutation: {
     // Users
@@ -220,6 +227,35 @@ export default {
       await models.Session.updateOne(
         { _id: args.session },
         { $push: { polls: poll } },
+      )
+
+      return poll
+    },
+    updatePollPriority: async (
+      parent,
+      { pollId, priority },
+      { req, models },
+      info,
+    ) => {
+      isAuthenticated(req)
+
+      await models.Poll.findOneAndUpdate(
+        { _id: pollId },
+        { priority: priority },
+      )
+
+      return { message: 'Poll priority updated succesfully! ' }
+    },
+    savePoll: async (parent, { pollId, result }, { req, models }, info) => {
+      isAuthenticated(req)
+
+      const poll = models.Poll.findById(pollId)
+
+      if (!poll) return null
+
+      await models.Poll.findOneAndUpdate(
+        { _id: pollId },
+        { result: result },
       )
 
       return poll

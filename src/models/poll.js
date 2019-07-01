@@ -7,8 +7,8 @@ const pollSchema = new Schema(
     result: Number,
     priority: {
       type: String,
-      enum: ['M', 'S', 'C', 'W'],
-      default: 'M',
+      enum: ['', 'M', 'S', 'C', 'W'],
+      default: '',
     },
     session: {
       type: Schema.Types.ObjectId,
