@@ -7,7 +7,7 @@
   "repository": "https://github.com/byurhanbeyzat/pp-server.git",
   "license": "MIT",
   "dependencies": {
-    "apollo-server-express": "^2.3.1",
+    "apollo-server-express": "^2.14.2",
     "bcrypt": "^3.0.3",
     "connect-redis": "^3.4.0",
     "cors": "^2.8.5",
